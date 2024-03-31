@@ -7,8 +7,10 @@ import (
 	"strconv"
 )
 
+// Functions provided through wrapper for faker test cases
 var getEnvOrDefault = envOrDefault
 var getOsArgs = osArgs
+var getOpenFile = openFile
 
 type propertyType uint8
 
@@ -33,10 +35,9 @@ type mapData struct {
 	// do not apply value to the ref object if object was set by any high level
 	// configs than env vars setup, meaning [args,file,api] > envs
 	skip bool
-	//
-
 }
 
+// Will map reference object fields to the interim structure
 func mapFieldData(ref interface{}) mapping {
 	search := make(mapping)
 	v := reflect.ValueOf(ref)
@@ -52,6 +53,7 @@ func mapFieldData(ref interface{}) mapping {
 	return search
 }
 
+// Apply string type value to mapping interim structure
 func valApply(m mapping, key string, val string) error {
 	if mData, exists := m[key]; exists {
 		var err error
@@ -79,6 +81,7 @@ func valApply(m mapping, key string, val string) error {
 	return nil
 }
 
+// Apply mapping back to the referenced structure
 func refApply(ref interface{}, m mapping, s setMap) {
 	// Get object behind pointer
 	ptr := reflect.ValueOf(ref)
@@ -101,6 +104,7 @@ func refApply(ref interface{}, m mapping, s setMap) {
 	}
 }
 
+// Apply type of interface (multi-type) value to the mapping
 func interfaceValApply(m mapping, key string, val interface{}) error {
 	var err error
 	if mData, exists := m[key]; exists {
@@ -171,4 +175,12 @@ func envOrDefault(name string, def string) (string, propertyType) {
 
 func osArgs() []string {
 	return os.Args
+}
+
+func openFile(fileName string) ([]byte, error) {
+	file, err := os.ReadFile(fileName)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read file %s, error %w", fileName, err)
+	}
+	return file, nil
 }

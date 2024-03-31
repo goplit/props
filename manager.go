@@ -3,7 +3,6 @@ package props
 import (
 	"fmt"
 	"gopkg.in/yaml.v3"
-	"os"
 	"strings"
 )
 
@@ -23,6 +22,8 @@ func New(reference interface{}) Properties {
 	return p
 }
 
+// InitDefaults
+// Initialize values in the default section of configuration
 func (p Properties) InitDefaults() error {
 	for key, mapElem := range p.obj {
 		// If already set by another pass, then mark as skip
@@ -39,6 +40,8 @@ func (p Properties) InitDefaults() error {
 	return nil
 }
 
+// FromEnv
+// Read environmental variables and match them to provided configuration
 func (p Properties) FromEnv() error {
 	for key, mapElem := range p.obj {
 		val, kind := getEnvOrDefault(mapElem.key, mapElem.def)
@@ -56,25 +59,31 @@ func (p Properties) FromEnv() error {
 	return nil
 }
 
+// FromYamlFile
+// Read Yaml File configuration top level properties
 func (p Properties) FromYamlFile(fileName string) error {
 	// Pull yaml file information
 	if len(fileName) == 0 {
 
-		return fmt.Errorf("no file was provided")
+		return fmt.Errorf("no file name was provided")
 	}
 	yamlMap := make(map[string]interface{})
-	file, err := os.ReadFile(fileName)
+	file, err := getOpenFile(fileName)
 	if err != nil {
-		return fmt.Errorf("cannot read yaml file %s, error %w", fileName, err)
+		return fmt.Errorf("from yaml fail, error %w", err)
 	}
 	err = yaml.Unmarshal(file, yamlMap)
 	if err != nil {
 		return fmt.Errorf("cannot unmarshal yaml file, error %w", err)
 	}
+	// Reassure those will be searchable
+	for k, v := range yamlMap {
+		yamlMap[strings.ToLower(k)] = v
+	}
 	// Apply values to the mapping
 	for key, mapElem := range p.obj {
 		// Check if value from the properties presented in yaml
-		if val, found := yamlMap[mapElem.key]; found {
+		if val, found := yamlMap[strings.ToLower(mapElem.key)]; found {
 			// Apply default value
 			err := interfaceValApply(p.obj, key, val)
 			if err != nil {
