@@ -1,0 +1,22 @@
+name: Test Commit
+run-name: ${{ github.actor }} running tests 🚀
+on: [push,pull_request]
+jobs:
+  test-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server"
+      - run: echo "🔎 Branch ${{ github.ref }}"
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: 1.20.x
+          cache: false
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - run: echo "🖥️ Testing."
+      - name: List files in the repository
+        run: |
+          go test -v ./...
+      - run: echo "🍏 This job's status is ${{ job.status }}."
